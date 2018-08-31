@@ -1,4 +1,8 @@
 .gradle/
 .idea/
 out/
+
+
 render.png
+
+renders/render4k.png

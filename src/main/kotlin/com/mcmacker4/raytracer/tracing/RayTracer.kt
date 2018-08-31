@@ -4,23 +4,20 @@ import com.mcmacker4.raytracer.scene.Scene
 import com.mcmacker4.raytracer.util.*
 import com.mcmacker4.raytracer.model.Solid
 import org.joml.Vector3f
+import org.joml.Vector3fc
 
 data class HitInfo(
         val t: Float,
-        val pos: Vector3f,
-        val normal: Vector3f,
+        val pos: Vector3fc,
+        val normal: Vector3fc,
         val solid: Solid)
 
 class Ray(
-        val origin: Vector3f,
-        val dir: Vector3f,
+        val origin: Vector3fc,
+        val dir: Vector3fc,
         val tMin: Float = 0.0001f,
         val tMax: Float = Float.MAX_VALUE) {
     
-    init {
-        dir.normalize()
-    }
-
     fun pointAt(t: Float) =
             origin + dir * t
 
@@ -28,32 +25,32 @@ class Ray(
 
 object RayTracer {
     
-    private fun randInUnitSphere() : Vector3f {
-        var p: Vector3f
-        do {
-            p = Vector3f(randf(), randf(), randf()) * 2f - 1f
-        } while(p.dot(p) >= 1f)
-        return p
-    }
+    const val MAX_BOUNCES = 50
     
-    fun shoot(scene: Scene, ray: Ray): Vector3f {
+    fun shoot(scene: Scene, ray: Ray, bounce: Int = 0): Vector3fc {
         
         val hits = arrayListOf<HitInfo>()
         for (solid in scene.elements) {
             solid.hit(ray, hits)
         }
         if (hits.size > 0) {
-            val hit = hits.minBy { it.t }
-            if (hit != null) {
-                val target = hit.normal + randInUnitSphere()
-                return shoot(scene, Ray(hit.pos, target)) * hit.solid.color
+            if(bounce < MAX_BOUNCES) {
+                val hit = hits.minBy { it.t }
+                if (hit != null) {
+                    val matRes = hit.solid.material.scatter(ray, hit)
+                    return if(matRes != null) {
+                        matRes.attenuation * shoot(scene, Ray(hit.pos, matRes.scatter), bounce + 1)
+                    } else Vector3f(0f)
+                }
+            } else {
+                return Vector3f(0f)
             }
         }
 
         return if(scene.environmentMap != null) {
             scene.environmentMap.getColor(ray.dir)
         } else {
-            val t = ray.dir.y * 0.5f + 1
+            val t = ray.dir.y() * 0.5f + 1
             Vector3f(1f, 1f, 1f) * (1 - t) + Vector3f(0.5f, 0.7f, 1.0f) * t
         }
         

@@ -21,7 +21,7 @@ object ParallelRenderer {
     const val SECTOR_W: Int = 30
     const val SECTOR_H: Int = 30
     
-    const val RAYS_PER_PIXEL = 200
+    const val RAYS_PER_PIXEL = 2000
     
     fun render(scene: Scene, camera: Camera, result: BufferedImage) {
         
@@ -51,10 +51,10 @@ object ParallelRenderer {
             }
         }
         
-        println("${sectors.size} sectors:")
+        println("${sectors.size} sectors.")
 
         /**
-         * Parallel render of 20x20 sectors
+         * Parallel render of 30x30 sectors
          */
         val renderedSectors = sectors.parallelStream().map {
             println("Rendering sector at: (${it.x}, ${it.y})")

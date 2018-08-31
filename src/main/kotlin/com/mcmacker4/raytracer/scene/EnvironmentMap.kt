@@ -1,12 +1,14 @@
 package com.mcmacker4.raytracer.scene
 
+import com.mcmacker4.raytracer.util.CustomAcos
+import com.mcmacker4.raytracer.util.angle2
 import com.mcmacker4.raytracer.util.asVector
 import org.joml.Vector3f
+import org.joml.Vector3fc
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import kotlin.math.PI
-import kotlin.math.abs
+import kotlin.math.*
 
 class EnvironmentMap(file: File) {
     
@@ -14,28 +16,15 @@ class EnvironmentMap(file: File) {
     
     private val front = Vector3f(0f, 0f, -1f)
     
-    fun getColor(dir: Vector3f): Vector3f {
-
-        var horAngle = Vector3f(dir.x, 0f, dir.z).angle(front)
-        if(dir.x < 0f) horAngle *= -1
-
-        var verAngle = Vector3f(0f, dir.y, -abs(dir.z)).angle(front)
-        if(dir.y < 0f) verAngle *= -1
-
-        if(horAngle < -PI) horAngle += PI.toFloat()
-        if(horAngle >= PI) horAngle -= PI.toFloat()
-        if(verAngle < -PI) verAngle += PI.toFloat()
-        if(verAngle >= PI) verAngle -= PI.toFloat()
-
-        var x = Math.round(((horAngle / PI.toFloat()) * 0.5 + 0.5) * image.width).toInt()
-        var y = Math.round(((verAngle / (PI.toFloat() / 2)) * 0.5 + 0.5) * image.height).toInt()
+    fun getColor(dir: Vector3fc): Vector3fc {
         
-        //println("($x, $y) of (${image.width}, ${image.height})")
+        val u = 0.5 + atan2(dir.z(), dir.x()) / (2*PI)
+        val v = dir.y() * 0.5 + 0.5
         
-        if(x >= image.width) x = image.width - 1 
-        if(y >= image.height) y = image.height - 1 
+        val iu = floor(u.coerceIn(0.0, 0.99999) * image.width).toInt()
+        val iv = floor(v.coerceIn(0.0, 0.99999) * image.height).toInt()
         
-        return asVector(image.getRGB(x, image.height - y - 1))
+        return asVector(image.getRGB(iu, image.height - iv - 1))
         
     }
     

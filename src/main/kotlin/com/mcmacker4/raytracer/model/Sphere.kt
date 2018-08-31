@@ -1,5 +1,6 @@
 package com.mcmacker4.raytracer.model
 
+import com.mcmacker4.raytracer.material.Material
 import com.mcmacker4.raytracer.util.minus
 import com.mcmacker4.raytracer.tracing.HitInfo
 import com.mcmacker4.raytracer.tracing.Ray
@@ -7,7 +8,7 @@ import org.joml.Vector3f
 import kotlin.math.sqrt
 
 
-class Sphere(val pos: Vector3f, val radius: Float, override val color: Vector3f) : Solid {
+class Sphere(val pos: Vector3f, val radius: Float, override val material: Material) : Solid {
     
     override fun hit(ray: Ray, hits: ArrayList<HitInfo>) {
 

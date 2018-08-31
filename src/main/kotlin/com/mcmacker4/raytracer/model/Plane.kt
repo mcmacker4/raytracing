@@ -1,10 +1,11 @@
 package com.mcmacker4.raytracer.model
 
+import com.mcmacker4.raytracer.material.Material
 import com.mcmacker4.raytracer.tracing.HitInfo
 import com.mcmacker4.raytracer.tracing.Ray
 import org.joml.Vector3f
 
-class Plane(val pos: Vector3f, val normal: Vector3f, override val color: Vector3f) : Solid {
+class Plane(val pos: Vector3f, val normal: Vector3f, override val material: Material) : Solid {
 
     override fun hit(ray: Ray, hits: ArrayList<HitInfo>) {
 

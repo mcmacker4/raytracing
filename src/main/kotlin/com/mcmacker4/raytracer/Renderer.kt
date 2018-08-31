@@ -16,7 +16,7 @@ object Renderer {
         val width = image.width
         val height = image.height
         
-        val raysPerPixel = 200
+        val raysPerPixel = 400
         
         for(j in 0 until height) {
             if(j % 10 == 0) println(j)
