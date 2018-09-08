@@ -1,9 +1,6 @@
 package com.mcmacker4.raytracer.scene
 
-import com.mcmacker4.raytracer.util.CustomAcos
-import com.mcmacker4.raytracer.util.angle2
 import com.mcmacker4.raytracer.util.asVector
-import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.awt.image.BufferedImage
 import java.io.File
@@ -12,9 +9,7 @@ import kotlin.math.*
 
 class EnvironmentMap(file: File) {
     
-    private var image: BufferedImage = ImageIO.read(file)
-    
-    private val front = Vector3f(0f, 0f, -1f)
+    val image: BufferedImage = ImageIO.read(file)
     
     fun getColor(dir: Vector3fc): Vector3fc {
         

@@ -50,7 +50,7 @@ object RayTracer {
         return if(scene.environmentMap != null) {
             scene.environmentMap.getColor(ray.dir)
         } else {
-            val t = ray.dir.y() * 0.5f + 1
+            val t = ray.dir.y() * 0.5f + 0.5f
             Vector3f(1f, 1f, 1f) * (1 - t) + Vector3f(0.5f, 0.7f, 1.0f) * t
         }
         
