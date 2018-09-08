@@ -1,7 +1,7 @@
 package com.mcmacker4.raytracer.renderer.cla
 
 import org.lwjgl.PointerBuffer
-import org.lwjgl.opencl.CL10.*
+import org.lwjgl.opencl.CL12.*
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer

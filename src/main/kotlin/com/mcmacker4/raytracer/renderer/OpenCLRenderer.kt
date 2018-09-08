@@ -3,7 +3,7 @@ package com.mcmacker4.raytracer.renderer
 import com.mcmacker4.raytracer.renderer.cla.*
 import com.mcmacker4.raytracer.scene.Camera
 import com.mcmacker4.raytracer.scene.Scene
-import org.lwjgl.opencl.CL10.*
+import org.lwjgl.opencl.CL12.*
 import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
 import java.util.*
@@ -52,8 +52,6 @@ object OpenCLRenderer : Renderer {
         
         this.device = device
         
-        println("Selected device: " + device.getName())
-
         val workItemSizes = device.getMaxWorkItemSizes()
         if(workItemSizes.size < 3) {
             error("The selected device does not support 2-dimensional work item sizes.")
@@ -74,7 +72,7 @@ object OpenCLRenderer : Renderer {
         return reader.lineSequence().joinToString("\n")
     }
     
-    private fun renderFullSize(scene: Scene, resultBuffer: CLBuffer, width: Int, height: Int) {
+    private fun renderFullSize(scene: Scene, resultImage: CLImage, width: Int, height: Int) {
         
         //Send a random seed for each pixel to program
         val seedsBuffer = CLBuffer.createBuffer(CL_MEM_READ_ONLY, width * height * 4L, context)
@@ -95,7 +93,7 @@ object OpenCLRenderer : Renderer {
             renderKernel.setArg(1, false)
         }
         
-        renderKernel.setArg(2, resultBuffer)
+        renderKernel.setArg(2, resultImage)
         renderKernel.setArg(3, seedsBuffer)
 
         val dimensions = 3
@@ -108,7 +106,7 @@ object OpenCLRenderer : Renderer {
         
     }
     
-    private fun downsample(renderBuffer: CLBuffer, resultBuffer: CLBuffer, width: Int, height: Int) {
+    private fun downsample(renderBuffer: CLImage, resultBuffer: CLImage, width: Int, height: Int) {
         
         val dimensions = 2
         val globalWorkItemSize = longArrayOf(width.toLong(), height.toLong())
@@ -123,15 +121,15 @@ object OpenCLRenderer : Renderer {
     
     override fun render(scene: Scene, camera: Camera, result: BufferedImage) {
         
-        val renderBuffer = CLBuffer.createBuffer(CL_MEM_READ_WRITE, result.width * result.height * SAMPLES * 4L, context)
-        val downsampleBuffer = CLBuffer.createBuffer(CL_MEM_WRITE_ONLY, result.width * result.height * 4L, context)
+        val renderImage = CLImage.createImage3D(result.width, result.height, SAMPLES, CL_MEM_READ_WRITE or CL_MEM_HOST_NO_ACCESS, context)
+        val downsampleImage = CLImage.createImage2D(result.width, result.height, CL_MEM_WRITE_ONLY or CL_MEM_HOST_READ_ONLY, context)
         
-        renderFullSize(scene, renderBuffer, result.width, result.height)
-        downsample(renderBuffer, downsampleBuffer, result.width, result.height)
+        renderFullSize(scene, renderImage, result.width, result.height)
+        downsample(renderImage, downsampleImage, result.width, result.height)
 
         //Read downsampleBuffer
         val downsampleBuff = MemoryUtil.memAllocInt(result.width * result.height)
-        queue.enqueueReadBuffer(downsampleBuffer, downsampleBuff)
+        queue.enqueueReadImage2D(downsampleImage, downsampleBuff, 0, 0, result.width, result.height)
 
         val downsampleArray = IntArray(result.width * result.height)
         downsampleBuff.get(downsampleArray)
@@ -140,8 +138,8 @@ object OpenCLRenderer : Renderer {
 
         MemoryUtil.memFree(downsampleBuff)
         
-        renderBuffer.release()
-        downsampleBuffer.release()
+        renderImage.release()
+        downsampleImage.release()
         
     }
     

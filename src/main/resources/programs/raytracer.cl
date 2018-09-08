@@ -1,8 +1,9 @@
-
+#pragma OPENCL EXTENSION cl_khr_3d_image_writes : enable
 /**
     Sampler
 */
-__constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+__constant sampler_t normalizedSampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+__constant sampler_t regularSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
 /**
     Solids
@@ -132,7 +133,7 @@ float4 getEnvironmentColor(float3 direction, image2d_t environment) {
     float u = atan2(direction.z, direction.x) / (2 * M_PI_F) * 0.5f + 0.5f;
     float v = 1.0f - (direction.y * 0.5f + 0.5f);
     
-    return read_imagef(environment, sampler, (float2) (u, v));
+    return read_imagef(environment, normalizedSampler, (float2) (u, v));
 
 //    return (float3) (u, v, 1.0f);
 }
@@ -165,7 +166,7 @@ float4 shootRay(float3 origin, float3 direction, __read_only image2d_t environme
     return color;
 }
 
-__kernel void render(image2d_t environment, unsigned int useEnv, __global unsigned int* result, __global const unsigned int* seeds) {
+__kernel void render(image2d_t environment, unsigned int useEnv, image3d_t result, __global const unsigned int* seeds) {
 
     size_t width = get_global_size(0);
     size_t height = get_global_size(1);
@@ -196,7 +197,7 @@ __kernel void render(image2d_t environment, unsigned int useEnv, __global unsign
     //const float3 raydir = corner + hor * u + ver * v;
     float4 color = shootRay(origin, corner + hor * u + ver * v, environment, useEnvironment, &seed);
     
-    result[index] = pixelPack(color);
+    write_imagef(result, (int4) (i, j, k, 0), color);
     
 }
 
@@ -207,7 +208,7 @@ __kernel void render(image2d_t environment, unsigned int useEnv, __global unsign
 */
 
 
-__kernel void downsample(const int samples, __global const unsigned int* image, __global unsigned int* result) {
+__kernel void downsample(const int samples, image3d_t image, image2d_t result) {
     
     size_t width = get_global_size(0);
     size_t height = get_global_size(1);
@@ -219,11 +220,13 @@ __kernel void downsample(const int samples, __global const unsigned int* image, 
     
     float4 color = (float4) (0.0);
     for(int k = 0; k < samples; k++) {
-        color += pixelUnpack(image[k * width * height + j * width + i]);
+        color += read_imagef(image, regularSampler, (int4) (i, j, k, 0));
+        //color += pixelUnpack(image[k * width * height + j * width + i]);
     }
     
     color /= samples;
     
-    result[j * width + i] = pixelPack(color);
+    //result[j * width + i] = pixelPack(color);
+    write_imagef(result, (int2) (i, j), color);
     
 }

@@ -1,6 +1,6 @@
 package com.mcmacker4.raytracer.renderer.cla
 
-import org.lwjgl.opencl.CL10.*
+import org.lwjgl.opencl.CL12.*
 import org.lwjgl.system.MemoryStack
 
 

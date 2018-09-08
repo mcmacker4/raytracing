@@ -1,7 +1,7 @@
 package com.mcmacker4.raytracer.renderer.cla
 
 import org.lwjgl.PointerBuffer
-import org.lwjgl.opencl.CL10.*
+import org.lwjgl.opencl.CL12.*
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
@@ -41,6 +41,23 @@ data class CLCommandQueue(val id: Long, val context: CLContext) {
         clEnqueueReadBuffer(id, buffer.id, true, 0, ptr, null, null)
     }
     
+    fun enqueueReadImage2D(image: CLImage, buffer: IntBuffer, startX: Int, startY: Int, width: Int, height: Int) {
+        MemoryStack.stackPush().use { stack ->
+            val originBuff = stack.mallocPointer(3)
+            originBuff.put(longArrayOf(startX.toLong(), startY.toLong(), 0))
+            originBuff.flip()
+
+            val regionBuff = stack.mallocPointer(3)
+            regionBuff.put(longArrayOf(width.toLong(), height.toLong(), 1))
+            regionBuff.flip()
+
+            val errnum = clEnqueueReadImage(id, image.id, true, originBuff, regionBuff, 0, 0, buffer, null, null)
+            if(errnum != CL_SUCCESS) {
+                error("Error reading image (err: $errnum)")
+            }
+        }
+    }
+    
     fun enqueueReadImage(image: CLImage, buffer: IntBuffer, startX: Int, startY: Int, startZ: Int, width: Int, height: Int, depth: Int, rowPitch: Int, slicePitch: Int) {
         MemoryStack.stackPush().use { stack ->
             val originBuff = stack.mallocPointer(3)
@@ -51,7 +68,10 @@ data class CLCommandQueue(val id: Long, val context: CLContext) {
             regionBuff.put(longArrayOf(width.toLong(), height.toLong(), depth.toLong()))
             regionBuff.flip()
             
-            clEnqueueReadImage(id, image.id, true, originBuff, regionBuff, rowPitch.toLong(), slicePitch.toLong(), buffer, null, null)
+            val errnum = clEnqueueReadImage(id, image.id, true, originBuff, regionBuff, rowPitch.toLong(), slicePitch.toLong(), buffer, null, null)
+            if(errnum != CL_SUCCESS) {
+                error("Error reading image (err: $errnum)")
+            }
         }
     }
     

@@ -1,7 +1,6 @@
 package com.mcmacker4.raytracer.renderer.cla
 
-import org.lwjgl.opencl.CL10
-import org.lwjgl.opencl.CL10.*
+import org.lwjgl.opencl.CL12.*
 import org.lwjgl.system.MemoryStack
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
@@ -78,13 +77,13 @@ data class CLDevice(val id: Long, val platform: CLPlatform) {
             MemoryStack.stackPush().use { stack ->
                 //Get number of devices
                 val numBuff = stack.mallocInt(1)
-                CL10.clGetDeviceIDs(platform.id, type.toLong(), null, numBuff)
+                clGetDeviceIDs(platform.id, type.toLong(), null, numBuff)
                 val num = numBuff.get()
 
                 if(num > 0) {
                     //Get devices
                     val devicesBuff = stack.mallocPointer(num)
-                    CL10.clGetDeviceIDs(platform.id, type.toLong(), devicesBuff, null as IntBuffer?)
+                    clGetDeviceIDs(platform.id, type.toLong(), devicesBuff, null as IntBuffer?)
 
                     while (devicesBuff.hasRemaining()) {
                         val id = devicesBuff.get()
